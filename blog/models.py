@@ -7,10 +7,13 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import slugify
 from django.utils.translation import ugettext_lazy as _
-from wagtail.wagtailcore.fields import RichTextField
-from wagtail.wagtailcore.models import Page
 from wagtail.wagtailadmin.edit_handlers import (
-    FieldPanel, InlinePanel, MultiFieldPanel, FieldRowPanel)
+    FieldPanel, FieldRowPanel, InlinePanel, MultiFieldPanel, StreamFieldPanel)
+from wagtail.wagtailcore import blocks
+from wagtail.wagtailcore.fields import StreamField
+from wagtail.wagtailcore.models import Page
+from wagtail.wagtailembeds.blocks import EmbedBlock
+from wagtail.wagtailimages.blocks import ImageChooserBlock
 from wagtail.wagtailimages.edit_handlers import ImageChooserPanel
 from wagtail.wagtailsnippets.models import register_snippet
 from wagtail.wagtailsearch import index
@@ -189,8 +192,39 @@ def limit_author_choices():
     return limit
 
 
+class ImageBlock(blocks.StructBlock):
+    image = ImageChooserBlock()
+    title = blocks.CharBlock(required=False)
+
+    class Meta:
+        label = "Image"
+        template = "blocks/image_block.html"
+
+
 class BlogPage(Page):
-    body = RichTextField(verbose_name=_('body'), blank=True)
+    content = StreamField([
+        ('text', blocks.RichTextBlock()),
+        ('image', ImageBlock()),
+        ('brightcove_video', blocks.URLBlock(template="blocks/brightcove_video.html")),
+        ('embed', EmbedBlock()),
+        ('columns', blocks.StreamBlock([
+            ('image', ImageBlock()),
+            ('text', blocks.RichTextBlock())
+        ])),
+        ('large_columns', blocks.StreamBlock([
+            ('text', blocks.RichTextBlock()),
+            ('image', ImageBlock()),
+        ])),
+        ('image_and_text', blocks.StructBlock([
+            ('image', ImageChooserBlock()),
+            ('image_title', blocks.CharBlock(required=False)),
+            ('image_position', blocks.ChoiceBlock(choices=(
+                ('left', "Left"),
+                ('right', "Right"),
+            ))),
+            ('text', blocks.RichTextBlock())
+        ], template="blocks/image_and_text.html"))
+    ], blank=True, null=True)
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
     date = models.DateField(
         _("Post date"), default=datetime.datetime.today,
@@ -215,7 +249,7 @@ class BlogPage(Page):
     )
 
     search_fields = Page.search_fields + [
-        index.SearchField('body'),
+        index.SearchField('content'),
     ]
     blog_categories = models.ManyToManyField(
         BlogCategory, through=BlogCategoryBlogPage, blank=True)
@@ -264,5 +298,5 @@ BlogPage.content_panels = [
         InlinePanel('categories', label=_("Categories")),
     ], heading="Tags and Categories"),
     ImageChooserPanel('header_image'),
-    FieldPanel('body', classname="full"),
+    StreamFieldPanel('content'),
 ]

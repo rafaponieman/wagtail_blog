@@ -208,7 +208,7 @@ class BlogPage(Page):
         ('brightcove_video', blocks.URLBlock(template="blocks/brightcove_video.html")),
         ('embed', EmbedBlock()),
         ('columns', blocks.StreamBlock([
-            ('image', ImageBlock()),
+            ('image', ImageBlock(template="blocks/column_image.html")),
             ('text', blocks.RichTextBlock())
         ])),
         ('large_columns', blocks.StreamBlock([

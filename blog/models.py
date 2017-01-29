@@ -223,7 +223,8 @@ class BlogPage(Page):
                 ('right', "Right"),
             ))),
             ('text', blocks.RichTextBlock())
-        ], template="blocks/image_and_text.html"))
+        ], template="blocks/image_and_text.html")),
+        ('gallery', blocks.ListBlock(ImageBlock(), template="blocks/gallery.html"))
     ], blank=True, null=True)
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
     date = models.DateField(

@@ -283,6 +283,21 @@ class BlogPage(Page):
         context['blogs'] = self.get_blog_index().blogindexpage.blogs
         context = get_blog_context(context)
         context['COMMENTS_APP'] = COMMENTS_APP
+
+        next_post = None
+        previous_post = None
+
+        for post in BlogPage.objects.live().order_by('date').filter(date__lte=self.date):
+            if post.pk != self.pk:
+                previous_post = post
+
+        for post in BlogPage.objects.live().order_by('-date').filter(date__gte=self.date):
+            if post.pk != self.pk:
+                next_post = post
+
+        context['previous_post'] = previous_post
+        context['next_post'] = next_post
+
         return context
 
     class Meta:

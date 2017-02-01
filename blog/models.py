@@ -234,7 +234,7 @@ class BlogPage(Page):
         ('gallery', blocks.ListBlock(ImageBlock(), template="blocks/gallery.html"))
     ], blank=True, null=True)
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
-    date = models.DateField(
+    date = models.DateTimeField(
         _("Post date"), default=datetime.datetime.today,
         help_text=_("This date may be displayed on the blog post. It is not "
                     "used to schedule posts to go live at a later date.")
@@ -294,13 +294,15 @@ class BlogPage(Page):
         next_post = None
         previous_post = None
 
-        for post in BlogPage.objects.live().order_by('date').filter(date__lte=self.date):
-            if post.pk != self.pk:
-                previous_post = post
-
-        for post in BlogPage.objects.live().order_by('-date').filter(date__gte=self.date):
+        for post in BlogPage.objects.live().filter(date__gte=self.date).order_by('date'):
             if post.pk != self.pk:
                 next_post = post
+                break
+
+        for post in BlogPage.objects.live().filter(date__lte=self.date):
+            if post.pk != self.pk:
+                previous_post = post
+                break
 
         context['previous_post'] = previous_post
         context['next_post'] = next_post
@@ -310,6 +312,7 @@ class BlogPage(Page):
     class Meta:
         verbose_name = _('Blog page')
         verbose_name_plural = _('Blog pages')
+        ordering = ('-date', )
 
     parent_page_types = ['blog.BlogIndexPage']
 

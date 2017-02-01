@@ -96,6 +96,13 @@ class BlogIndexPage(Page):
             except EmptyPage:
                 blogs = paginator.page(paginator.num_pages)
 
+        from genesinspace.models import SearchPage
+
+        try:
+            context['search_url'] = SearchPage.objects.live().get().url
+        except:
+            pass
+
         context['blogs'] = blogs
         context['category'] = category
         context['tag'] = tag

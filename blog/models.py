@@ -294,12 +294,13 @@ class BlogPage(Page):
         next_post = None
         previous_post = None
 
-        for post in BlogPage.objects.live().filter(date__gte=self.date).order_by('date'):
+        for post in BlogPage.objects.live().order_by('-date').filter(date__gte=self.date).order_by('date'):
             if post.pk != self.pk:
                 next_post = post
                 break
 
-        for post in BlogPage.objects.live().filter(date__lte=self.date):
+        for post in BlogPage.objects.live().order_by('-date').filter(date__lte=self.date):
+            print(post.title)
             if post.pk != self.pk:
                 previous_post = post
                 break
